@@ -233,6 +233,37 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
               </div>
             );
           })}
+          {/* Alignment guides (Canva-style) */}
+          {guides.v.map((x, i) => (
+            <div
+              key={`v${i}`}
+              style={{
+                position: "absolute",
+                left: x,
+                top: 0,
+                width: 1,
+                height: CANVAS_H,
+                background: "#ff2d95",
+                pointerEvents: "none",
+                boxShadow: "0 0 4px #ff2d95",
+              }}
+            />
+          ))}
+          {guides.h.map((y, i) => (
+            <div
+              key={`h${i}`}
+              style={{
+                position: "absolute",
+                top: y,
+                left: 0,
+                height: 1,
+                width: CANVAS_W,
+                background: "#ff2d95",
+                pointerEvents: "none",
+                boxShadow: "0 0 4px #ff2d95",
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>
