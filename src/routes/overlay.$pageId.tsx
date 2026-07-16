@@ -83,10 +83,21 @@ function OverlayView() {
     return l.src ?? "";
   }
 
+  const W = page?.width ?? 1920;
+  const H = page?.height ?? 1080;
+
+  const [vp, setVp] = useState({ w: typeof window !== "undefined" ? window.innerWidth : W, h: typeof window !== "undefined" ? window.innerHeight : H });
+  useEffect(() => {
+    const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   if (!page) return null;
 
-  const W = page.width ?? 1920;
-  const H = page.height ?? 1080;
+  const scale = Math.min(vp.w / W, vp.h / H);
+  const offX = (vp.w - W * scale) / 2;
+  const offY = (vp.h - H * scale) / 2;
 
   return (
     <div
@@ -100,12 +111,12 @@ function OverlayView() {
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
+          top: offY,
+          left: offX,
           width: W,
           height: H,
+          transform: `scale(${scale})`,
           transformOrigin: "top left",
-          // Crisp image scaling for OBS Browser Source
           imageRendering: "auto",
         }}
       >
