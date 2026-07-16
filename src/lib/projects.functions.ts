@@ -54,7 +54,7 @@ export const getProject = createServerFn({ method: "GET" })
 
     const { data: pages, error: pErr } = await context.supabase
       .from("pages")
-      .select("id, name, background_url, refresh_ms, layers, sheet_connection_id, updated_at")
+      .select("id, name, background_url, refresh_ms, layers, sheet_connection_id, updated_at, width, height")
       .eq("project_id", data.id)
       .order("created_at", { ascending: true });
     if (pErr) throw new Error(pErr.message);
