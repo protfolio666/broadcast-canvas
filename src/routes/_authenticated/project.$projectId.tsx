@@ -63,8 +63,10 @@ function EditorPage() {
     if (activePage) {
       editor.init(activePage.id, activePage.background_url, (activePage.layers as unknown as Layer[]) ?? []);
     }
+    // Only re-init when the active page id changes — not on every project refetch,
+    // otherwise a background autosave would wipe in-progress edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId, data]);
+  }, [activePageId]);
 
   // Load latest sheet values for previews in the editor
   useEffect(() => {
