@@ -10,7 +10,9 @@ interface Props {
   height?: number;
 }
 
-export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props) {
+export function Canvas({ scale, onScaleChange, resolveText, resolveSrc, width = 1920, height = 1080 }: Props) {
+  const CANVAS_W = width;
+  const CANVAS_H = height;
   const wrapRef = useRef<HTMLDivElement>(null);
   const { background, layers, selectedId, select, updateLayer, pushHistory } = useEditor();
   const [drag, setDrag] = useState<null | {
