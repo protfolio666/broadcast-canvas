@@ -93,6 +93,8 @@ export const savePage = createServerFn({ method: "POST" })
       refresh_ms?: number;
       layers?: unknown[];
       sheet_connection_id?: string | null;
+      width?: number;
+      height?: number;
     }) =>
       z
         .object({
@@ -102,6 +104,8 @@ export const savePage = createServerFn({ method: "POST" })
           refresh_ms: z.number().int().min(500).max(60000).optional(),
           layers: z.array(z.any()).optional(),
           sheet_connection_id: z.string().uuid().nullable().optional(),
+          width: z.number().int().min(320).max(7680).optional(),
+          height: z.number().int().min(180).max(4320).optional(),
         })
         .parse(d),
   )
