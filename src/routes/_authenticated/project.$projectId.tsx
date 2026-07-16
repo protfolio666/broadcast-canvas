@@ -134,7 +134,7 @@ function EditorPage() {
         }
       } else if (meta && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        saveMut.mutate();
+        saveMut.mutate({});
       }
     }
     window.addEventListener("keydown", onKey);
