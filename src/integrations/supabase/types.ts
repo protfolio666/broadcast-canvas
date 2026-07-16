@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           background_url: string | null
           created_at: string
+          height: number
           id: string
           layers: Json
           name: string
@@ -25,10 +26,12 @@ export type Database = {
           refresh_ms: number
           sheet_connection_id: string | null
           updated_at: string
+          width: number
         }
         Insert: {
           background_url?: string | null
           created_at?: string
+          height?: number
           id?: string
           layers?: Json
           name?: string
@@ -36,10 +39,12 @@ export type Database = {
           refresh_ms?: number
           sheet_connection_id?: string | null
           updated_at?: string
+          width?: number
         }
         Update: {
           background_url?: string | null
           created_at?: string
+          height?: number
           id?: string
           layers?: Json
           name?: string
@@ -47,6 +52,7 @@ export type Database = {
           refresh_ms?: number
           sheet_connection_id?: string | null
           updated_at?: string
+          width?: number
         }
         Relationships: [
           {

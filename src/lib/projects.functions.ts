@@ -54,7 +54,7 @@ export const getProject = createServerFn({ method: "GET" })
 
     const { data: pages, error: pErr } = await context.supabase
       .from("pages")
-      .select("id, name, background_url, refresh_ms, layers, sheet_connection_id, updated_at")
+      .select("id, name, background_url, refresh_ms, layers, sheet_connection_id, updated_at, width, height")
       .eq("project_id", data.id)
       .order("created_at", { ascending: true });
     if (pErr) throw new Error(pErr.message);
@@ -93,6 +93,8 @@ export const savePage = createServerFn({ method: "POST" })
       refresh_ms?: number;
       layers?: unknown[];
       sheet_connection_id?: string | null;
+      width?: number;
+      height?: number;
     }) =>
       z
         .object({
@@ -102,6 +104,8 @@ export const savePage = createServerFn({ method: "POST" })
           refresh_ms: z.number().int().min(500).max(60000).optional(),
           layers: z.array(z.any()).optional(),
           sheet_connection_id: z.string().uuid().nullable().optional(),
+          width: z.number().int().min(320).max(7680).optional(),
+          height: z.number().int().min(180).max(4320).optional(),
         })
         .parse(d),
   )
