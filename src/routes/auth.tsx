@@ -37,13 +37,13 @@ function AuthPage() {
         toast.success("Welcome back");
         navigate({ to: "/dashboard" });
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin + "/dashboard" },
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        toast.success("Account created. Check your email to verify.");
+        // Auto-confirm is enabled — sign in immediately.
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) throw signInErr;
+        toast.success("Account created");
+        navigate({ to: "/dashboard" });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + "/reset-password",

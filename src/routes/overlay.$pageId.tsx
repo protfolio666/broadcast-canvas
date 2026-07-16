@@ -28,32 +28,48 @@ function OverlayView() {
     refetchInterval: 15000, // pick up structural edits every 15s
   });
 
-  const [values, setValues] = useState<string[][] | null>(null);
+  const [values, setValues] = useState<Record<string, string[][]>>({});
 
   const refreshMs = page?.refresh_ms ?? 1000;
-  const connId = page?.sheet_connection_id ?? null;
 
   useEffect(() => {
     document.body.classList.add("obs-mode");
     return () => document.body.classList.remove("obs-mode");
   }, []);
 
+  // Collect every connectionId referenced by layer bindings (+ fallback page.sheet_connection_id).
+  const connIds = useMemo(() => {
+    const s = new Set<string>();
+    const ls = (page?.layers as unknown as Layer[]) ?? [];
+    for (const l of ls) {
+      if (l.binding?.source === "sheet" && l.binding.connectionId) s.add(l.binding.connectionId);
+    }
+    if (page?.sheet_connection_id) s.add(page.sheet_connection_id);
+    return Array.from(s);
+  }, [page]);
+
+  const connKey = connIds.join(",");
+
   useEffect(() => {
-    if (!connId) return;
+    if (connIds.length === 0) return;
     let cancelled = false;
-    const load = () =>
-      fetchValsFn({ data: { connectionId: connId } })
-        .then((r) => {
-          if (!cancelled) setValues(r.rows);
-        })
-        .catch(() => {});
+    const load = () => {
+      connIds.forEach((cid) => {
+        fetchValsFn({ data: { connectionId: cid } })
+          .then((r) => {
+            if (!cancelled) setValues((prev) => ({ ...prev, [cid]: r.rows }));
+          })
+          .catch(() => {});
+      });
+    };
     load();
     const t = setInterval(load, Math.max(500, refreshMs));
     return () => {
       cancelled = true;
       clearInterval(t);
     };
-  }, [connId, refreshMs, fetchValsFn]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connKey, refreshMs, fetchValsFn]);
 
   const layers = useMemo<Layer[]>(
     () => ((page?.layers as unknown as Layer[]) ?? []).filter((l) => !l.hidden),
@@ -62,10 +78,12 @@ function OverlayView() {
 
   function resolveText(l: Layer): string {
     if (l.type !== "text") return "";
-    if (l.binding?.source === "sheet" && values) {
-      const headers = values[0] ?? [];
+    if (l.binding?.source === "sheet") {
+      const rows = values[l.binding.connectionId];
+      if (!rows) return l.text ?? "";
+      const headers = rows[0] ?? [];
       const idx = headers.indexOf(l.binding.column);
-      const row = values[l.binding.row - 1];
+      const row = rows[l.binding.row - 1];
       if (idx < 0 || !row) return "";
       return row[idx] ?? "";
     }
@@ -73,10 +91,12 @@ function OverlayView() {
   }
   function resolveSrc(l: Layer): string {
     if (l.type !== "image") return "";
-    if (l.binding?.source === "sheet" && values) {
-      const headers = values[0] ?? [];
+    if (l.binding?.source === "sheet") {
+      const rows = values[l.binding.connectionId];
+      if (!rows) return l.src ?? "";
+      const headers = rows[0] ?? [];
       const idx = headers.indexOf(l.binding.column);
-      const row = values[l.binding.row - 1];
+      const row = rows[l.binding.row - 1];
       if (idx < 0 || !row) return "";
       return row[idx] ?? "";
     }
