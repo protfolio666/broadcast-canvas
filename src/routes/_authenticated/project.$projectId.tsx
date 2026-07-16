@@ -362,7 +362,14 @@ function EditorPage() {
       {/* Body */}
       <div className="flex-1 flex overflow-hidden">
         <LayersPanel />
-        <Canvas scale={scale} onScaleChange={setScale} resolveText={resolveText} resolveSrc={resolveSrc} />
+        <Canvas
+          scale={scale}
+          onScaleChange={setScale}
+          resolveText={resolveText}
+          resolveSrc={resolveSrc}
+          width={activePage?.width ?? 1920}
+          height={activePage?.height ?? 1080}
+        />
         <PropertiesPanel sheets={data.sheets.map((s) => ({ id: s.id, worksheet: s.worksheet, headers: s.headers as string[] }))} />
       </div>
 
