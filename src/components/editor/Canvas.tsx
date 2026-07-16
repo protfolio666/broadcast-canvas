@@ -81,7 +81,11 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
     <div
       ref={wrapRef}
       className="flex-1 bg-black overflow-auto flex items-center justify-center relative p-8"
-      onClick={() => select(null)}
+      onClick={(e) => {
+        // Only deselect when the empty canvas area itself is clicked — not
+        // when a drag/resize on a child layer bubbles up as a click.
+        if (e.target === e.currentTarget) select(null);
+      }}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
