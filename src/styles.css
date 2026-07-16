@@ -92,6 +92,7 @@
 }
 
 /* Transparent OBS body */
+html:has(body.obs-mode),
 body.obs-mode {
   background: transparent !important;
 }
