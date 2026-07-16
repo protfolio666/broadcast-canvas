@@ -6,10 +6,9 @@ interface Props {
   onScaleChange: (s: number) => void;
   resolveText: (l: Layer) => string;
   resolveSrc: (l: Layer) => string;
+  width?: number;
+  height?: number;
 }
-
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
 
 export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
