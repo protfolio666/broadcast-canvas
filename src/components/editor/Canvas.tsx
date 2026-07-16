@@ -22,6 +22,7 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
     startY: number;
     orig: Layer;
   }>(null);
+  const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -54,7 +55,71 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
       const dx = (e.clientX - drag.startX) / scale;
       const dy = (e.clientY - drag.startY) / scale;
       if (drag.mode === "move") {
-        updateLayer(drag.id, { x: drag.orig.x + dx, y: drag.orig.y + dy });
+        let nx = drag.orig.x + dx;
+        let ny = drag.orig.y + dy;
+        const w = drag.orig.w;
+        const h = drag.orig.h;
+        // Snap thresholds in canvas px (scale-independent for consistent feel)
+        const TH = 6 / scale;
+
+        // Collect snap targets from other visible layers + canvas
+        const others = layers.filter((l) => l.id !== drag.id && !l.hidden);
+        const vTargets: number[] = [0, CANVAS_W / 2, CANVAS_W];
+        const hTargets: number[] = [0, CANVAS_H / 2, CANVAS_H];
+        for (const o of others) {
+          vTargets.push(o.x, o.x + o.w / 2, o.x + o.w);
+          hTargets.push(o.y, o.y + o.h / 2, o.y + o.h);
+        }
+
+        const activeV: number[] = [];
+        const activeH: number[] = [];
+
+        // Vertical snap: left, center, right edges of dragged layer
+        const myV = [nx, nx + w / 2, nx + w];
+        let bestVDelta: number | null = null;
+        let bestVLine: number | null = null;
+        for (let i = 0; i < myV.length; i++) {
+          for (const t of vTargets) {
+            const d = t - myV[i];
+            if (Math.abs(d) <= TH && (bestVDelta === null || Math.abs(d) < Math.abs(bestVDelta))) {
+              bestVDelta = d;
+              bestVLine = t;
+            }
+          }
+        }
+        if (bestVDelta !== null) {
+          nx += bestVDelta;
+          if (bestVLine !== null) activeV.push(bestVLine);
+          // Also show any other edge that matches after snap
+          const afterV = [nx, nx + w / 2, nx + w];
+          for (const t of vTargets) {
+            if (afterV.some((v) => Math.abs(v - t) < 0.5) && !activeV.includes(t)) activeV.push(t);
+          }
+        }
+
+        const myH = [ny, ny + h / 2, ny + h];
+        let bestHDelta: number | null = null;
+        let bestHLine: number | null = null;
+        for (let i = 0; i < myH.length; i++) {
+          for (const t of hTargets) {
+            const d = t - myH[i];
+            if (Math.abs(d) <= TH && (bestHDelta === null || Math.abs(d) < Math.abs(bestHDelta))) {
+              bestHDelta = d;
+              bestHLine = t;
+            }
+          }
+        }
+        if (bestHDelta !== null) {
+          ny += bestHDelta;
+          if (bestHLine !== null) activeH.push(bestHLine);
+          const afterH = [ny, ny + h / 2, ny + h];
+          for (const t of hTargets) {
+            if (afterH.some((v) => Math.abs(v - t) < 0.5) && !activeH.includes(t)) activeH.push(t);
+          }
+        }
+
+        setGuides({ v: activeV, h: activeH });
+        updateLayer(drag.id, { x: nx, y: ny });
       } else if (drag.handle) {
         let { x, y, w, h } = drag.orig;
         if (drag.handle.includes("e")) w = Math.max(20, drag.orig.w + dx);
@@ -72,10 +137,13 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
         updateLayer(drag.id, { x, y, w, h });
       }
     },
-    [drag, scale, updateLayer],
+    [drag, scale, updateLayer, layers],
   );
 
-  const onPointerUp = useCallback(() => setDrag(null), []);
+  const onPointerUp = useCallback(() => {
+    setDrag(null);
+    setGuides({ v: [], h: [] });
+  }, []);
 
   return (
     <div
@@ -165,6 +233,37 @@ export function Canvas({ scale, onScaleChange, resolveText, resolveSrc }: Props)
               </div>
             );
           })}
+          {/* Alignment guides (Canva-style) */}
+          {guides.v.map((x, i) => (
+            <div
+              key={`v${i}`}
+              style={{
+                position: "absolute",
+                left: x,
+                top: 0,
+                width: 1,
+                height: CANVAS_H,
+                background: "#ff2d95",
+                pointerEvents: "none",
+                boxShadow: "0 0 4px #ff2d95",
+              }}
+            />
+          ))}
+          {guides.h.map((y, i) => (
+            <div
+              key={`h${i}`}
+              style={{
+                position: "absolute",
+                top: y,
+                left: 0,
+                height: 1,
+                width: CANVAS_W,
+                background: "#ff2d95",
+                pointerEvents: "none",
+                boxShadow: "0 0 4px #ff2d95",
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>
