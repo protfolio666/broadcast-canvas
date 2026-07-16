@@ -274,7 +274,7 @@ function EditorPage() {
             <Link2 className="size-3" /> Sheet
           </button>
           <button
-            onClick={() => saveMut.mutate()}
+            onClick={() => saveMut.mutate({})}
             className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-xs hover:bg-white/10 flex items-center gap-1.5"
           >
             <Save className="size-3" /> Save
