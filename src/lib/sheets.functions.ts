@@ -11,10 +11,16 @@ function parseSheetUrl(url: string): { spreadsheetId: string; gid: string | null
 }
 
 async function fetchSheetCsv(spreadsheetId: string, gid: string | null): Promise<string[][]> {
-  const url = gid
-    ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`
-    : `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
-  const res = await fetch(url, { redirect: "follow" });
+  // Cache-bust: Google caches CSV export aggressively (up to ~30s) at the edge.
+  // Adding a unique query param + no-store forces a fresh read every poll.
+  const cacheBust = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const base = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
+  const url = gid ? `${base}&gid=${gid}&_=${cacheBust}` : `${base}&_=${cacheBust}`;
+  const res = await fetch(url, {
+    redirect: "follow",
+    cache: "no-store",
+    headers: { "cache-control": "no-cache", pragma: "no-cache" },
+  });
   if (!res.ok) {
     throw new Error(
       `Sheet fetch failed (${res.status}). Set the sheet to 'Anyone with the link can view'.`,
