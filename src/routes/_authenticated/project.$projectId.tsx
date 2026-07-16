@@ -61,7 +61,7 @@ function EditorPage() {
 
   useEffect(() => {
     if (activePage) {
-      editor.init(activePage.id, activePage.background_url, (activePage.layers as Layer[]) ?? []);
+      editor.init(activePage.id, activePage.background_url, (activePage.layers as unknown as Layer[]) ?? []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId, data]);
