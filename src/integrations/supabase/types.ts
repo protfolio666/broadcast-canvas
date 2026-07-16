@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pages: {
+        Row: {
+          background_url: string | null
+          created_at: string
+          id: string
+          layers: Json
+          name: string
+          project_id: string
+          refresh_ms: number
+          sheet_connection_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_url?: string | null
+          created_at?: string
+          id?: string
+          layers?: Json
+          name?: string
+          project_id: string
+          refresh_ms?: number
+          sheet_connection_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_url?: string | null
+          created_at?: string
+          id?: string
+          layers?: Json
+          name?: string
+          project_id?: string
+          refresh_ms?: number
+          sheet_connection_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pages_sheet_conn_fk"
+            columns: ["sheet_connection_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sheet_connections: {
+        Row: {
+          created_at: string
+          headers: Json
+          id: string
+          project_id: string
+          spreadsheet_id: string
+          spreadsheet_url: string
+          updated_at: string
+          worksheet: string
+        }
+        Insert: {
+          created_at?: string
+          headers?: Json
+          id?: string
+          project_id: string
+          spreadsheet_id: string
+          spreadsheet_url: string
+          updated_at?: string
+          worksheet?: string
+        }
+        Update: {
+          created_at?: string
+          headers?: Json
+          id?: string
+          project_id?: string
+          spreadsheet_id?: string
+          spreadsheet_url?: string
+          updated_at?: string
+          worksheet?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_connections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
