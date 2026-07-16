@@ -63,8 +63,10 @@ function EditorPage() {
     if (activePage) {
       editor.init(activePage.id, activePage.background_url, (activePage.layers as unknown as Layer[]) ?? []);
     }
+    // Only re-init when the active page id changes — not on every project refetch,
+    // otherwise a background autosave would wipe in-progress edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId, data]);
+  }, [activePageId]);
 
   // Load latest sheet values for previews in the editor
   useEffect(() => {
@@ -77,8 +79,8 @@ function EditorPage() {
   }, [data, fetchValsFn]);
 
   const saveMut = useMutation({
-    mutationFn: async () => {
-      if (!activePageId) return;
+    mutationFn: async (opts: { silent?: boolean } = {}) => {
+      if (!activePageId) return { silent: opts.silent };
       await savePageFn({
         data: {
           id: activePageId,
@@ -86,22 +88,24 @@ function EditorPage() {
           layers: editor.layers,
         },
       });
+      return { silent: opts.silent };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       editor.markSaved();
-      toast.success("Saved");
-      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      if (!res?.silent) toast.success("Saved");
+      // Do NOT invalidate the project query here — the background autosave would
+      // refetch and re-init the editor, wiping in-progress edits.
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
-  // Autosave (debounced)
+  // Autosave (debounced, silent — runs in background without interrupting work)
   const dirty = editor.dirty;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!dirty || !activePageId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => saveMut.mutate(), 1200);
+    saveTimer.current = setTimeout(() => saveMut.mutate({ silent: true }), 1200);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
@@ -130,7 +134,7 @@ function EditorPage() {
         }
       } else if (meta && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        saveMut.mutate();
+        saveMut.mutate({});
       }
     }
     window.addEventListener("keydown", onKey);
@@ -270,7 +274,7 @@ function EditorPage() {
             <Link2 className="size-3" /> Sheet
           </button>
           <button
-            onClick={() => saveMut.mutate()}
+            onClick={() => saveMut.mutate({})}
             className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-xs hover:bg-white/10 flex items-center gap-1.5"
           >
             <Save className="size-3" /> Save
