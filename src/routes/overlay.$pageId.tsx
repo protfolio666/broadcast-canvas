@@ -30,7 +30,7 @@ function OverlayView() {
 
   const [values, setValues] = useState<string[][] | null>(null);
 
-  const refreshMs = page?.refresh_ms ?? 2000;
+  const refreshMs = page?.refresh_ms ?? 1000;
   const connId = page?.sheet_connection_id ?? null;
 
   useEffect(() => {
