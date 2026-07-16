@@ -85,6 +85,9 @@ function OverlayView() {
 
   if (!page) return null;
 
+  const W = page.width ?? 1920;
+  const H = page.height ?? 1080;
+
   return (
     <div
       style={{
@@ -99,9 +102,11 @@ function OverlayView() {
           position: "absolute",
           top: 0,
           left: 0,
-          width: 1920,
-          height: 1080,
+          width: W,
+          height: H,
           transformOrigin: "top left",
+          // Crisp image scaling for OBS Browser Source
+          imageRendering: "auto",
         }}
       >
         {page.background_url && (
