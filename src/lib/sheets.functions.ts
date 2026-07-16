@@ -114,8 +114,28 @@ export const fetchSheetValues = createServerFn({ method: "GET" })
     z.object({ connectionId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: conn, error } = await supabaseAdmin
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error(
+        "Missing Supabase environment variable(s): SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY.",
+      );
+    }
+    const supabasePublic = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const h = new Headers(init?.headers);
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) {
+            h.delete("Authorization");
+          }
+          h.set("apikey", key);
+          return fetch(input, { ...init, headers: h });
+        },
+      },
+    });
+    const { data: conn, error } = await supabasePublic
       .from("sheet_connections")
       .select("spreadsheet_id, worksheet")
       .eq("id", data.connectionId)
@@ -124,3 +144,4 @@ export const fetchSheetValues = createServerFn({ method: "GET" })
     const rows = await fetchSheetCsv(conn.spreadsheet_id, conn.worksheet);
     return { rows };
   });
+
