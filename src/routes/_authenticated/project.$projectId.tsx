@@ -254,6 +254,29 @@ function EditorPage() {
             <Square className="size-4" />
           </ToolbarBtn>
           <div className="h-4 w-px bg-white/10 mx-1" />
+          <select
+            value={`${activePage?.width ?? 1920}x${activePage?.height ?? 1080}`}
+            onChange={(e) => {
+              if (!activePageId) return;
+              const [w, h] = e.target.value.split("x").map(Number);
+              savePageFn({ data: { id: activePageId, width: w, height: h } }).then(() => {
+                qc.invalidateQueries({ queryKey: ["project", projectId] });
+                toast.success(`Output set to ${w}×${h}`);
+              });
+            }}
+            title="Output resolution sent to OBS"
+            className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-200 outline-none hover:bg-white/10 focus:border-electric"
+          >
+            <option value="1280x720">720p · 16:9</option>
+            <option value="1920x1080">1080p · 16:9 (default)</option>
+            <option value="2560x1440">1440p · 16:9</option>
+            <option value="3840x2160">4K · 16:9</option>
+            <option value="1080x1080">Square · 1:1</option>
+            <option value="1080x1920">Portrait · 9:16</option>
+            <option value="1440x1080">4:3</option>
+            <option value="2100x900">Ultrawide · 21:9</option>
+          </select>
+          <div className="h-4 w-px bg-white/10 mx-1" />
           <label className="cursor-pointer px-3 py-1.5 border border-white/10 rounded text-xs hover:bg-white/5 flex items-center gap-1.5">
             <Upload className="size-3" /> Background
             <input
