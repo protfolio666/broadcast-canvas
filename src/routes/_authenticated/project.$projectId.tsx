@@ -79,8 +79,8 @@ function EditorPage() {
   }, [data, fetchValsFn]);
 
   const saveMut = useMutation({
-    mutationFn: async () => {
-      if (!activePageId) return;
+    mutationFn: async (opts: { silent?: boolean } = {}) => {
+      if (!activePageId) return { silent: opts.silent };
       await savePageFn({
         data: {
           id: activePageId,
@@ -88,22 +88,24 @@ function EditorPage() {
           layers: editor.layers,
         },
       });
+      return { silent: opts.silent };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       editor.markSaved();
-      toast.success("Saved");
-      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      if (!res?.silent) toast.success("Saved");
+      // Do NOT invalidate the project query here — the background autosave would
+      // refetch and re-init the editor, wiping in-progress edits.
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
-  // Autosave (debounced)
+  // Autosave (debounced, silent — runs in background without interrupting work)
   const dirty = editor.dirty;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!dirty || !activePageId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => saveMut.mutate(), 1200);
+    saveTimer.current = setTimeout(() => saveMut.mutate({ silent: true }), 1200);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
